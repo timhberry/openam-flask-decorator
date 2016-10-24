@@ -5,7 +5,7 @@ import requests
 
 cookiename = 'openAMUserCookieName'
 amURL = 'https://openam.example.com/'
-validTokenAPI = amURL + 'openam/identity/istokenvalid?tokenid='
+validTokenAPI = amURL + 'openam/json/sessions/{token}?_action=validate'
 loginURL = amURL + 'openam/UI/Login'
 
 def session_required(f):
@@ -13,8 +13,8 @@ def session_required(f):
   def decorated_function(*args, **kwargs):
     usercookie = request.cookies.get(cookiename)
     if usercookie:
-      amQuery = requests.get(validTokenAPI + usercookie)
-      if 'boolean=true' in amQuery.text:
+      amQuery = requests.post(validTokenAPI.format(token=usercookie))
+      if amQuery.json()['valid']:
         return f(*args, **kwargs)
     return redirect(loginURL)
   return decorated_function
